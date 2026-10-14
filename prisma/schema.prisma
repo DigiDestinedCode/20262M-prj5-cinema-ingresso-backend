@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client"
+  output   = "./src/generated/prisma"
+}
+datasource db {
+  provider = "mysql"
+}
+
+model assento {
+  assento_id      Int               @id @unique(map: "assento_id_UNIQUE") @default(autoincrement())
+  sala_id         Int
+  assento_reserva assento_reserva[]
+}
+
+model assento_reserva {
+  assento_reserva_id Int      @id @unique(map: "assento_reserva_id_UNIQUE") @default(autoincrement())
+  reserva_id         Int
+  assento_id         Int
+  assento            assento  @relation(fields: [assento_id], references: [assento_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assento_reserva_assento1")
+  reserva            reserva  @relation(fields: [reserva_id], references: [reserva_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_assento_reserva_reserva1")
+  ticket             ticket[]
+
+  @@index([assento_id], map: "fk_assento_reserva_assento1_idx")
+  @@index([reserva_id], map: "fk_assento_reserva_reserva1_idx")
+}
+
+model preco {
+  preco_id          Int       @id @unique(map: "preco_id_UNIQUE") @default(autoincrement())
+  preco_descricao   String    @db.VarChar(150)
+  preco_valor       Decimal   @db.Decimal(5, 2)
+  preco_valor_final Decimal   @db.Decimal(5, 2)
+  preco_data_inicio DateTime? @db.Date
+  preco_data_fim    DateTime? @db.Date
+  preco_status      Int       @default(1)
+  preco_created_at  DateTime  @default(now()) @db.Timestamp(0)
+  preco_updated_at  DateTime  @default(now()) @db.Timestamp(0)
+  ticket            ticket[]
+
+  @@index([preco_status], map: "idx_precificacao_ativo")
+  @@index([preco_data_inicio, preco_data_fim], map: "idx_precificacao_datas")
+}
+
+/// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
+model reserva {
+  reserva_id           Int               @id @unique(map: "reserva_id_UNIQUE") @default(autoincrement())
+  sessao_id            Int
+  reserva_status       Int
+  reserva_bloqueado_at DateTime?         @db.DateTime(0)
+  reserva_created_at   DateTime          @default(now()) @db.Timestamp(0)
+  reserva_updated_at   DateTime          @default(now()) @db.Timestamp(0)
+  assento_reserva      assento_reserva[]
+
+  @@index([reserva_bloqueado_at], map: "idx_reservacao_bloqueado_ate")
+  @@index([reserva_status], map: "idx_reservacao_status")
+}
+
+model ticket {
+  ticket_id                Int             @id @unique(map: "ticket_id_UNIQUE") @default(autoincrement())
+  preco_id                 Int
+  assento_reserva_id       Int
+  ticket_codigo            String          @unique(map: "uq_ticket_codigo") @db.VarChar(50)
+  ticket_data_emissao      DateTime        @default(now()) @db.DateTime(0)
+  ticket_data_cancelamento DateTime?       @db.DateTime(0)
+  ticket_status            Int
+  ticket_created_at        DateTime        @default(now()) @db.Timestamp(0)
+  ticket_updated_at        DateTime        @default(now()) @db.Timestamp(0)
+  assento_reserva          assento_reserva @relation(fields: [assento_reserva_id], references: [assento_reserva_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ticket_assento_reserva1")
+  preco                    preco           @relation(fields: [preco_id], references: [preco_id], map: "fk_ticket_preco")
+
+  @@index([assento_reserva_id], map: "fk_ticket_assento_reserva1_idx")
+  @@index([preco_id], map: "idx_ticket_precificacao_id")
+  @@index([ticket_status], map: "idx_ticket_status")
+}
