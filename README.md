@@ -13,22 +13,25 @@ Copiar .env para alteração em powershell
 ```bash
 $ Copy-Item .env.example .env
 ```
-
+alterar "database_url" apenas no .env a fim de manter o sigilo no acesso ao banco de dados.
 
 Criação de JWT Secret
 ```bash
 $ node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))
 ```
 
+Alterar no .env o JWT Secret
 
+
+Geração de prisma de schema prisma do banco de dados importado
 ```bash
 npx prisma generate
 ```
 
-alterar "database_url" apenas no .env a fim de manter o sigilo no acesso ao banco de dados. E incluir JWT Secret
 
 
-## Compile and run the project
+
+## Compilar e rodar o programa
 
 ```bash
 # development
@@ -41,7 +44,7 @@ $ npm run start:dev
 $ npm run start:prod
 ```
 
-## Run tests
+## Rodar Testes
 
 ```bash
 # unit tests
